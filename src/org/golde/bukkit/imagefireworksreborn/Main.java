@@ -1,0 +1,260 @@
+package org.golde.bukkit.imagefireworksreborn;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
+public class Main extends JavaPlugin implements Listener {
+	public static Main plugin;
+	public File dataFolder;
+	private String commandUse = ChatColor.RED + "Command Use: /imgfws <give:launch> <player> <firework>";
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private static HashMap<String, String> fireworkList = new HashMap();
+
+	public void onEnable()
+	{
+		plugin = this;
+		dataFolder = getDataFolder();
+		Bukkit.getServer().getPluginManager().registerEvents(this, this);
+
+		File imageDir = new File(dataFolder + File.separator + "images");
+		if (!imageDir.exists()) {
+			imageDir.mkdirs();
+		}
+		File fwsDir = new File(dataFolder + File.separator + "fireworks");
+		if (!fwsDir.exists()) {
+			fwsDir.mkdirs();
+		}
+		File fireworksFile = new File(dataFolder + File.separator + "fireworks" + File.separator + "demofirework.yml");
+		FileConfiguration fireworks = YamlConfiguration.loadConfiguration(fireworksFile);
+		if (!fireworksFile.exists())
+		{
+			fireworks.set("Name", "Demo Firework");
+			fireworks.set("Image", "imgfw.png");
+			fireworks.set("Color.UseFullColor", true);
+			fireworks.set("Color.R", Integer.valueOf(255));
+			fireworks.set("Color.G", Integer.valueOf(255));
+			fireworks.set("Color.B", Integer.valueOf(0));
+			try
+			{
+				fireworks.save(fireworksFile);
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		saveResource("images" + File.separator + "imgfw.png", true);
+		updateFireworkList();
+
+
+	}
+	
+	private String getServerVersion() {
+		return getServer().getClass().getName().split("\\.")[3];
+	}
+	
+	private boolean is18OrBelow() {
+		return getServerVersion().startsWith("v1_8") || getServerVersion().startsWith("v1_7");
+	}
+	
+	void playSound(final Location center) {
+		if(is18OrBelow()) {
+			center.getWorld().playSound(center, Sound.valueOf("FIREWORK_BLAST"), 3.0F, 1.0F);
+		}else {
+			center.getWorld().playSound(center, Sound.valueOf("ENTITY_FIREWORK_BLAST"), 3.0F, 1.0F);
+		}
+	}
+
+	public void onDisable() {}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
+	{
+			if (sender.hasPermission("imagefireworks.use"))
+			{
+				if (args.length > 0)
+				{
+					String option = args[0];
+					if (option.equalsIgnoreCase("give"))
+					{
+						String pName = args[1];
+						String fwName = "";
+						for (int i = 2; i < args.length; i++) {
+							fwName = fwName + args[i] + " ";
+						}
+						fwName = fwName.trim();
+						if (Bukkit.getPlayer(pName) != null)
+						{
+							Player target = Bukkit.getPlayer(pName);
+							if (fireworkList.containsKey(fwName))
+							{
+								File fwFile = new File(dataFolder + File.separator + "fireworks" + File.separator + (String)fireworkList.get(fwName));
+								FileConfiguration fw = YamlConfiguration.loadConfiguration(fwFile);
+
+								ItemStack iS = new ItemStack(Material.FIREWORK, 1);
+								ItemMeta iM = iS.getItemMeta();
+								iM.setDisplayName(fw.getString("Name"));
+								
+								ArrayList<String> iL = new ArrayList();
+								iL.add(ChatColor.RED + "Image Firework");
+								iM.setLore(iL);
+								iS.setItemMeta(iM);
+
+								target.getInventory().addItem(new ItemStack[] { iS });
+								target.updateInventory();
+							}
+							else
+							{
+								sender.sendMessage(ChatColor.RED + "Not a valid firework name: " + fwName);
+							}
+						}
+						else
+						{
+							sender.sendMessage(ChatColor.RED + "You must enter a valid player name...");
+						}
+					}
+					else if (option.equalsIgnoreCase("launch"))
+					{
+						String pName = args[1];
+						String fwName = "";
+						for (int i = 2; i < args.length; i++) {
+							fwName = fwName + args[i] + " ";
+						}
+						fwName = fwName.trim();
+						if (Bukkit.getPlayer(pName) != null)
+						{
+							Player target = Bukkit.getPlayer(pName);
+							if (fireworkList.containsKey(fwName))
+							{
+								CustomFirework cfw = new CustomFirework((String)fireworkList.get(fwName));
+								cfw.useFirework(target.getLocation());
+							}
+							else
+							{
+								sender.sendMessage(ChatColor.RED + "Not a valid firework name: " + fwName);
+							}
+						}
+						else
+						{
+							sender.sendMessage(ChatColor.RED + "You must enter a valid player name...");
+						}
+					}
+					else if (option.equalsIgnoreCase("reload"))
+					{
+						updateFireworkList();
+						sender.sendMessage(ChatColor.GREEN + "Fireworks List reloaded...");
+					}
+					else
+					{
+						sender.sendMessage(commandUse);
+					}
+				}
+				else
+				{
+					sender.sendMessage(commandUse);
+					sender.sendMessage("Active Fireworks: " + fireworkList.keySet().toString());
+				}
+				return true;
+			}
+			sender.sendMessage("You don't have permission to use this command.");
+		return true;
+	}
+
+	@EventHandler
+	public void onClick(PlayerInteractEvent event)
+	{
+		if ((event.getAction() == Action.RIGHT_CLICK_BLOCK) && 
+				(event.getItem() != null) && (event.getItem().hasItemMeta()) && 
+				(((String)event.getItem().getItemMeta().getLore().get(0)).equals(ChatColor.RED + "Image Firework")))
+		{
+			event.setCancelled(true);
+			if (fireworkList.containsKey(event.getItem().getItemMeta().getDisplayName()))
+			{
+				CustomFirework cfw = new CustomFirework((String)fireworkList.get(event.getItem().getItemMeta().getDisplayName()));
+				Location loc = event.getClickedBlock().getLocation();
+				loc.setY(loc.getY() + 1.0D);
+				loc.setYaw(event.getPlayer().getLocation().getYaw());
+				cfw.useFirework(loc);
+				if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
+					event.getPlayer().getInventory().removeItem(new ItemStack[] { event.getPlayer().getItemInHand() });
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	public void onDispenseFirework(BlockDispenseEvent event)
+	{
+		if ((event.getItem() != null) && (event.getItem().hasItemMeta()) && 
+				(((String)event.getItem().getItemMeta().getLore().get(0)).equals(ChatColor.RED + "Image Firework")))
+		{
+			event.setCancelled(true);
+			if (fireworkList.containsKey(event.getItem().getItemMeta().getDisplayName()))
+			{
+				org.bukkit.material.Dispenser dispenserMaterial = (org.bukkit.material.Dispenser) event.getBlock().getState().getData();
+				org.bukkit.block.Dispenser dispenserBlock = (org.bukkit.block.Dispenser) event.getBlock().getState();
+
+				dispenserBlock.getInventory().removeItem(new ItemStack[] { event.getItem() });
+				CustomFirework cfw = new CustomFirework((String)fireworkList.get(event.getItem().getItemMeta().getDisplayName()));
+				Location loc = event.getBlock().getLocation();
+				loc.setX(loc.getX() + 0.5D);
+				loc.setY(loc.getY() + 0.5D);
+				loc.setZ(loc.getZ() + 0.5D);
+
+				Vector offset;
+				switch(dispenserMaterial.getFacing()){
+				case NORTH: loc.setYaw(180); offset = new Vector(0, 0, -1); break;
+				case SOUTH: loc.setYaw(0);   offset = new Vector(0, 0, 1);  break;
+				case EAST: loc.setYaw(-90);  offset = new Vector(1, 0, 0);  break;
+				case WEST: loc.setYaw(90);   offset = new Vector(-1, 0, 0); break;
+				case UP: loc.setYaw(0);      offset = new Vector(0, 1, 0);  break;
+				case DOWN: loc.setYaw(0);    offset = new Vector(0, -1, 0); break;
+				default: loc.setYaw(0);      offset = new Vector(0, 0, 0);  break;
+				}
+
+				loc.add(offset);
+				cfw.useFirework(loc);
+			}
+		}
+	}
+
+	private void updateFireworkList()
+	{
+		File[] files = new File(Main.plugin.dataFolder + File.separator + "fireworks").listFiles();
+		File[] arrayOfFile1 = files;int j = files.length;
+		for (int i = 0; i < j; i++)
+		{
+			File file = arrayOfFile1[i];
+			if (file.isFile())
+			{
+				File fwFile = new File(Main.plugin.dataFolder + File.separator + "fireworks" + File.separator + file.getName());
+				FileConfiguration fw = YamlConfiguration.loadConfiguration(fwFile);
+				fireworkList.put(fw.getString("Name"), file.getName());
+			}
+		}
+	}
+
+}
