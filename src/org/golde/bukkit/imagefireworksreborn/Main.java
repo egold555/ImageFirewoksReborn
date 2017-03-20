@@ -14,7 +14,6 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -42,6 +41,8 @@ public class Main extends JavaPlugin implements Listener {
 		getLogger().info("ImageFireworksReborn is starting...");
 		dataFolder = getDataFolder();
 		Bukkit.getServer().getPluginManager().registerEvents(this, this);
+		
+		saveDefaultConfig();
 
 		File imageDir = new File(dataFolder + File.separator + "images");
 		if (!imageDir.exists()) {
@@ -74,6 +75,8 @@ public class Main extends JavaPlugin implements Listener {
 		updateFireworkList();
 		getLogger().info("ImageFireworksReborn has started!");
 		getLogger().info("Thanks to Inventivetalent for the Particle and Reflection API!");
+		
+		checkForUpdates();
 	}
 	
 	private String getServerVersion() {
@@ -288,6 +291,29 @@ public class Main extends JavaPlugin implements Listener {
 				FileConfiguration fw = YamlConfiguration.loadConfiguration(fwFile);
 				fireworkList.put(fw.getString("Name").toLowerCase(), file.getName());
 			}
+		}
+	}
+	
+	void checkForUpdates(){
+		Updater updater = new Updater("38203"); 
+		Updater.UpdateResults result = updater.checkForUpdates();
+		if(result.getResult() == Updater.UpdateResult.FAIL)
+		{
+			getLogger().severe("Update checker failed to check for updates!");
+			getLogger().severe("Stacktrace: " + result.getVersion());
+		}
+		else if(result.getResult() == Updater.UpdateResult.NO_UPDATE)
+		{
+			getLogger().info("No update available");
+		}
+		else if(result.getResult() == Updater.UpdateResult.UPDATE_AVAILABLE)
+		{
+			Bukkit.getConsoleSender().sendMessage("[ImageFireworksReborn] §aAn update for ImageFireworksReborn has been found!");
+			Bukkit.getConsoleSender().sendMessage("[ImageFireworksReborn] §bCurrent version: §e" + getDescription().getVersion() + "§b, new version: §e" + result.getVersion());
+		}
+		else if (result.getResult() == Updater.UpdateResult.DEV){
+			Bukkit.getConsoleSender().sendMessage("[ImageFireworksReborn] §eYou seem to have a version of the plugin that is not on spigot...");
+			Bukkit.getConsoleSender().sendMessage("[ImageFireworksReborn] §cExpect bugs!");
 		}
 	}
 
