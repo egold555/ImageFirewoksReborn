@@ -107,9 +107,9 @@ public class Main extends JavaPlugin implements Listener {
 						if (Bukkit.getPlayer(pName) != null)
 						{
 							Player target = Bukkit.getPlayer(pName);
-							if (fireworkList.containsKey(fwName))
+							if (fireworkList.containsKey(fwName.toLowerCase()))
 							{
-								File fwFile = new File(dataFolder + File.separator + "fireworks" + File.separator + (String)fireworkList.get(fwName));
+								File fwFile = new File(dataFolder + File.separator + "fireworks" + File.separator + (String)fireworkList.get(fwName.toLowerCase()));
 								FileConfiguration fw = YamlConfiguration.loadConfiguration(fwFile);
 
 								ItemStack iS = new ItemStack(Material.FIREWORK, 1);
@@ -136,6 +136,7 @@ public class Main extends JavaPlugin implements Listener {
 					}
 					else if (option.equalsIgnoreCase("launch"))
 					{
+						//TODO: check args
 						String pName = args[1];
 						String fwName = "";
 						for (int i = 2; i < args.length; i++) {
@@ -145,14 +146,14 @@ public class Main extends JavaPlugin implements Listener {
 						if (Bukkit.getPlayer(pName) != null)
 						{
 							Player target = Bukkit.getPlayer(pName);
-							if (fireworkList.containsKey(fwName))
+							if (fireworkList.containsKey(fwName.toLowerCase()))
 							{
-								CustomFirework cfw = new CustomFirework((String)fireworkList.get(fwName));
+								CustomFirework cfw = new CustomFirework((String)fireworkList.get(fwName.toLowerCase()));
 								cfw.useFirework(target.getLocation());
 							}
 							else
 							{
-								sender.sendMessage(ChatColor.RED + "Not a valid firework name: " + fwName);
+								sender.sendMessage(ChatColor.RED + "Not a valid firework name: " + fwName.toLowerCase());
 							}
 						}
 						else
@@ -173,7 +174,7 @@ public class Main extends JavaPlugin implements Listener {
 				else
 				{
 					sender.sendMessage(commandUse);
-					sender.sendMessage("Active Fireworks: " + fireworkList.keySet().toString());
+					sender.sendMessage("Active Fireworks: " + fireworkList.keySet().toString().toLowerCase());
 				}
 				return true;
 			}
@@ -189,9 +190,9 @@ public class Main extends JavaPlugin implements Listener {
 				(((String)event.getItem().getItemMeta().getLore().get(0)).equals(ChatColor.RED + "Image Firework")))
 		{
 			event.setCancelled(true);
-			if (fireworkList.containsKey(event.getItem().getItemMeta().getDisplayName()))
+			if (fireworkList.containsKey(event.getItem().getItemMeta().getDisplayName().toLowerCase()))
 			{
-				CustomFirework cfw = new CustomFirework((String)fireworkList.get(event.getItem().getItemMeta().getDisplayName()));
+				CustomFirework cfw = new CustomFirework((String)fireworkList.get(event.getItem().getItemMeta().getDisplayName().toLowerCase()));
 				Location loc = event.getClickedBlock().getLocation();
 				loc.setY(loc.getY() + 1.0D);
 				loc.setYaw(event.getPlayer().getLocation().getYaw());
@@ -210,13 +211,13 @@ public class Main extends JavaPlugin implements Listener {
 				(((String)event.getItem().getItemMeta().getLore().get(0)).equals(ChatColor.RED + "Image Firework")))
 		{
 			event.setCancelled(true);
-			if (fireworkList.containsKey(event.getItem().getItemMeta().getDisplayName()))
+			if (fireworkList.containsKey(event.getItem().getItemMeta().getDisplayName().toLowerCase()))
 			{
 				org.bukkit.material.Dispenser dispenserMaterial = (org.bukkit.material.Dispenser) event.getBlock().getState().getData();
 				org.bukkit.block.Dispenser dispenserBlock = (org.bukkit.block.Dispenser) event.getBlock().getState();
 
 				dispenserBlock.getInventory().removeItem(new ItemStack[] { event.getItem() });
-				CustomFirework cfw = new CustomFirework((String)fireworkList.get(event.getItem().getItemMeta().getDisplayName()));
+				CustomFirework cfw = new CustomFirework((String)fireworkList.get(event.getItem().getItemMeta().getDisplayName().toLowerCase()));
 				Location loc = event.getBlock().getLocation();
 				loc.setX(loc.getX() + 0.5D);
 				loc.setY(loc.getY() + 0.5D);
@@ -250,7 +251,7 @@ public class Main extends JavaPlugin implements Listener {
 			{
 				File fwFile = new File(Main.plugin.dataFolder + File.separator + "fireworks" + File.separator + file.getName());
 				FileConfiguration fw = YamlConfiguration.loadConfiguration(fwFile);
-				fireworkList.put(fw.getString("Name"), file.getName());
+				fireworkList.put(fw.getString("Name").toLowerCase(), file.getName());
 			}
 		}
 	}
