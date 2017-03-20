@@ -25,17 +25,19 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
+
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class Main extends JavaPlugin implements Listener {
 	public static Main plugin;
 	public File dataFolder;
 	private String commandUse = ChatColor.RED + "Command Use: /imgfws <give:launch> <player> <firework>";
 	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static HashMap<String, String> fireworkList = new HashMap();
 
 	public void onEnable()
 	{
 		plugin = this;
+		getLogger().info("ImageFireworksReborn is starting...");
 		dataFolder = getDataFolder();
 		Bukkit.getServer().getPluginManager().registerEvents(this, this);
 
@@ -47,16 +49,16 @@ public class Main extends JavaPlugin implements Listener {
 		if (!fwsDir.exists()) {
 			fwsDir.mkdirs();
 		}
-		File fireworksFile = new File(dataFolder + File.separator + "fireworks" + File.separator + "demofirework.yml");
+		File fireworksFile = new File(dataFolder + File.separator + "fireworks" + File.separator + "demo.yml");
 		FileConfiguration fireworks = YamlConfiguration.loadConfiguration(fireworksFile);
 		if (!fireworksFile.exists())
 		{
-			fireworks.set("Name", "Demo Firework");
+			fireworks.set("Name", "Demo");
 			fireworks.set("Image", "imgfw.png");
 			fireworks.set("Color.UseFullColor", true);
-			fireworks.set("Color.R", Integer.valueOf(255));
-			fireworks.set("Color.G", Integer.valueOf(255));
-			fireworks.set("Color.B", Integer.valueOf(0));
+			fireworks.set("Color.R", 255);
+			fireworks.set("Color.G", 0);
+			fireworks.set("Color.B", 255);
 			try
 			{
 				fireworks.save(fireworksFile);
@@ -68,20 +70,16 @@ public class Main extends JavaPlugin implements Listener {
 		}
 		saveResource("images" + File.separator + "imgfw.png", true);
 		updateFireworkList();
-
-
+		getLogger().info("ImageFireworksReborn has started!");
+		getLogger().info("Thanks to Inventivetalent for the Particle and Reflection API!");
 	}
 	
 	private String getServerVersion() {
 		return getServer().getClass().getName().split("\\.")[3];
 	}
 	
-	private boolean is18OrBelow() {
-		return getServerVersion().startsWith("v1_8") || getServerVersion().startsWith("v1_7");
-	}
-	
 	void playSound(final Location center) {
-		if(is18OrBelow()) {
+		if(getServerVersion().startsWith("v1_8") || getServerVersion().startsWith("v1_7")) {
 			center.getWorld().playSound(center, Sound.valueOf("FIREWORK_BLAST"), 3.0F, 1.0F);
 		}else {
 			center.getWorld().playSound(center, Sound.valueOf("ENTITY_FIREWORK_BLAST"), 3.0F, 1.0F);
@@ -90,7 +88,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	public void onDisable() {}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
 	{
 			if (sender.hasPermission("imagefireworks.use"))

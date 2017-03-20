@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,15 +19,14 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import com.darkblade12.particleeffect.ParticleEffect;
-import com.darkblade12.particleeffect.ParticleEffect.ParticleColor;
+import org.inventivetalent.particle.ParticleEffect;
 
+@SuppressWarnings({ "rawtypes", "unchecked", "unused" })
 public class CustomFirework
 {
 	private String image;
 	private final ParticleEffect particle = ParticleEffect.REDSTONE;
 	private Color color;
-	@SuppressWarnings("unused")
 	private String name;
 	private boolean useColor;
 
@@ -116,8 +116,9 @@ public class CustomFirework
 						
 						try
 						{
-							ParticleColor pc = new ParticleEffect.OrdinaryColor(firework.get(i).getColor().getRed(), firework.get(i).getColor().getGreen(), firework.get(i).getColor().getBlue());
-							particle.display(pc, center, 100);
+							particle.sendColor(Bukkit.getOnlinePlayers(), center, new Color(firework.get(i).getColor().getRed(), firework.get(i).getColor().getGreen(), firework.get(i).getColor().getBlue()));
+							//ParticleColor pc = new ParticleEffect.OrdinaryColor(firework.get(i).getColor().getRed(), firework.get(i).getColor().getGreen(), firework.get(i).getColor().getBlue());
+							//particle.display(pc, center, 100);
 						}
 						catch (Exception e)
 						{
@@ -147,7 +148,7 @@ public class CustomFirework
 	private ArrayList<Pixel> generateFirework(String image)
 	{
 		BufferedImage imagen;
-		@SuppressWarnings({ "rawtypes", "unchecked" })
+		
 		ArrayList<Pixel> result = new ArrayList();
 		File imageFile = new File(Main.plugin.dataFolder + File.separator + "images" + File.separator + image);
 		if (!imageFile.exists()) {
