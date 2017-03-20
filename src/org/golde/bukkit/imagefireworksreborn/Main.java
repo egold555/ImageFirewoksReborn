@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -13,6 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -98,6 +100,11 @@ public class Main extends JavaPlugin implements Listener {
 					String option = args[0];
 					if (option.equalsIgnoreCase("give"))
 					{
+						if (args.length <= 1) {
+							sender.sendMessage(commandUse);
+							return true;
+						}
+						
 						String pName = args[1];
 						String fwName = "";
 						for (int i = 2; i < args.length; i++) {
@@ -127,6 +134,7 @@ public class Main extends JavaPlugin implements Listener {
 							else
 							{
 								sender.sendMessage(ChatColor.RED + "Not a valid firework name: " + fwName);
+								sender.sendMessage("Active Fireworks: " + fireworkList.keySet().toString().toLowerCase());
 							}
 						}
 						else
@@ -136,7 +144,11 @@ public class Main extends JavaPlugin implements Listener {
 					}
 					else if (option.equalsIgnoreCase("launch"))
 					{
-						//TODO: check args
+						if (args.length <= 1) {
+							sender.sendMessage(commandUse);
+							return true;
+						}
+						
 						String pName = args[1];
 						String fwName = "";
 						for (int i = 2; i < args.length; i++) {
@@ -154,6 +166,7 @@ public class Main extends JavaPlugin implements Listener {
 							else
 							{
 								sender.sendMessage(ChatColor.RED + "Not a valid firework name: " + fwName.toLowerCase());
+								sender.sendMessage("Active Fireworks: " + fireworkList.keySet().toString().toLowerCase());
 							}
 						}
 						else
@@ -174,12 +187,34 @@ public class Main extends JavaPlugin implements Listener {
 				else
 				{
 					sender.sendMessage(commandUse);
-					sender.sendMessage("Active Fireworks: " + fireworkList.keySet().toString().toLowerCase());
 				}
 				return true;
 			}
 			sender.sendMessage("You don't have permission to use this command.");
 		return true;
+	}
+	
+	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args){
+		List<String> l = new ArrayList<String>(); 
+		if(command.getName().equalsIgnoreCase("imagefireworks")){  
+			
+			if(args.length == 1) {
+				l.add("give");
+				l.add("launch");
+			}
+			
+			if(args.length == 2) {
+				for(Player p:Bukkit.getOnlinePlayers()) {
+					l.add(p.getName());
+				}
+			}
+			
+			if(args.length == 3) {
+				l.addAll(fireworkList.keySet());
+			}
+			
+		}
+		return l;
 	}
 
 	@EventHandler
