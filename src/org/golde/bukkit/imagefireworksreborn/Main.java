@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -197,7 +198,7 @@ public class Main extends JavaPlugin implements Listener {
 		return true;
 	}
 	
-	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args){
+	public List<String> onTabComplete(CommandSender sender, Command command, String alias, final String[] args){
 		List<String> l = new ArrayList<String>(); 
 		if(command.getName().equalsIgnoreCase("imagefireworks")){  
 			
@@ -215,6 +216,13 @@ public class Main extends JavaPlugin implements Listener {
 			if(args.length == 3) {
 				l.addAll(fireworkList.keySet());
 			}
+			
+			l.removeIf(new Predicate<String>() {
+				@Override
+				public boolean test(String a) {
+					return !(a.startsWith(args[args.length - 1]));
+				}
+			});
 			
 		}
 		return l;

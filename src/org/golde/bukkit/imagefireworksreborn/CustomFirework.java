@@ -24,10 +24,10 @@ import org.inventivetalent.particle.ParticleEffect;
 @SuppressWarnings({ "rawtypes", "unchecked", "unused" })
 public class CustomFirework
 {
-	private String image;
 	private final ParticleEffect particle = ParticleEffect.REDSTONE;
 	private Color color;
 	private String name;
+	private BufferedImage image;
 	private boolean useColor;
 
 	public CustomFirework(String fireworkFile)
@@ -36,9 +36,19 @@ public class CustomFirework
 		FileConfiguration fw = YamlConfiguration.loadConfiguration(fwFile);
 
 		this.name = fw.getString("Name");
-		this.image = fw.getString("Image");
+		this.image = getBufferedImage(fw.getString("Image"));
 		this.useColor = fw.getBoolean("Color.UseFullColor");
 		this.color = new Color(fw.getInt("Color.R"), fw.getInt("Color.G"), fw.getInt("Color.B"));
+	}
+
+	public CustomFirework(BufferedImage image, int red, int green, int blue) {
+		if(red == -1 && green == -1 && blue == -1) {
+			useColor = true;
+		}else {
+			this.color = new Color(red, green, blue);
+		}
+		this.image = image;
+		this.name = "API";
 	}
 
 	public void useFirework(final Location center)
@@ -51,7 +61,7 @@ public class CustomFirework
 
 		new BukkitRunnable()
 		{
-			int timer = 100;
+			int timer = Main.plugin.getConfig().getInt("ticks-till-explode", 100);
 
 			public void run()
 			{
@@ -93,10 +103,10 @@ public class CustomFirework
 		final int yIni = center.getBlockY();
 		final int zIni = center.getBlockZ();
 		final double rot = center.getYaw();
-		
+
 		new BukkitRunnable()
 		{
-			int times = 30;
+			int times = Main.plugin.getConfig().getInt("ticks-to-display-image-for", 30);
 
 			public void run()
 			{
@@ -106,19 +116,17 @@ public class CustomFirework
 					for (int i = 0; i < firework.size(); i++)
 					{
 						Vector v = new Vector((firework.get(i).getLoc()).getX() / 5.0D, (firework.get(i).getLoc()).getY() / 5.0D, 0);
-						
+
 						// rotate v by "rot" around vertical (y) axis.
 						Vector rotated = rotateVector(v, rot);
-						
+
 						center.setX(xIni + rotated.getX());
 						center.setY(yIni + rotated.getY());
 						center.setZ(zIni + rotated.getZ());
-						
+
 						try
 						{
 							particle.sendColor(Bukkit.getOnlinePlayers(), center, new Color(firework.get(i).getColor().getRed(), firework.get(i).getColor().getGreen(), firework.get(i).getColor().getBlue()));
-							//ParticleColor pc = new ParticleEffect.OrdinaryColor(firework.get(i).getColor().getRed(), firework.get(i).getColor().getGreen(), firework.get(i).getColor().getBlue());
-							//particle.display(pc, center, 100);
 						}
 						catch (Exception e)
 						{
@@ -134,7 +142,7 @@ public class CustomFirework
 		}.runTaskTimer(Main.plugin, 0L, 0L);
 	}
 
-	public static Vector rotateVector(Vector v, double angleInDegrees)
+	private Vector rotateVector(Vector v, double angleInDegrees)
 	{
 		// rotate v by "rot" around vertical (y) axis.
 		double angRad = (Math.PI * (angleInDegrees + 180)) / 180.0;
@@ -145,11 +153,9 @@ public class CustomFirework
 		return new Vector(rotatedX, rotatedY, rotatedZ);
 	}
 
-	private ArrayList<Pixel> generateFirework(String image)
-	{
+	private BufferedImage getBufferedImage(String image) {
 		BufferedImage imagen;
-		
-		ArrayList<Pixel> result = new ArrayList();
+
 		File imageFile = new File(Main.plugin.dataFolder + File.separator + "images" + File.separator + image);
 		if (!imageFile.exists()) {
 			try
@@ -169,6 +175,13 @@ public class CustomFirework
 		{
 			throw new RuntimeException("Exception: " + e.getMessage() + " - File:" + imageFile.getAbsolutePath());
 		}
+		return imagen;
+	}
+
+	private ArrayList<Pixel> generateFirework(BufferedImage imagen)
+	{
+		ArrayList<Pixel> result = new ArrayList();
+
 		if (imagen == null) {
 			return result;
 		}
